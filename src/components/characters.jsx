@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import Card from 'react-bootstrap/Card';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
@@ -7,32 +7,14 @@ import Pagination from 'react-bootstrap/Pagination';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
-
-const fetchUrls = async (uri) => {
-  return fetch(uri).then(response => response.json()).then(json => {
-    console.log(json)
-    return json
-})
-}
-
-const fetchRickAndMortyAPI = async (setter) => {
-  return fetch('https://rickandmortyapi.com/api')
-  .then((response) => {
-    return response.json()
-  })
-  .then(async json => {
-    for (const [key, value] of Object.entries(json)) {
-      const urlResult = await fetchUrls(value)
-      setter(s => ({...s, [key]: ({...urlResult, url: value})}))
-    }
-  })
-};
+import { fetchRickAndMortyAPI, fetchUrls } from '../utils/fetch'
 
 const STATUS_COLOR = {
   'Alive': 'green',
   'Dead': 'red',
   'unknown': 'gray',
 }
+
 export default function Characters(props) {
   
   const [ state, setState] = useState()
