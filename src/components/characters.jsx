@@ -7,7 +7,7 @@ import Pagination from 'react-bootstrap/Pagination';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
-import { fetchRickAndMortyAPI, fetchUrls } from '../utils/fetch'
+import { getRickAndMortyCharacters, getRickAndMortyCharactersFiltered } from '../utils/graphql'
 
 const STATUS_COLOR = {
   'Alive': 'green',
@@ -18,24 +18,17 @@ const STATUS_COLOR = {
 export default function Characters(props) {
   
   const [ state, setState] = useState()
-  const charactersUrl = state?.characters?.url && new URL(state?.characters?.url)
-  const currentPage = charactersUrl?.searchParams?.has('page') ? charactersUrl.searchParams.get('page') : 1
-
-  const goToPage = (url) => {
-    fetchUrls(url).then(json => setState(s => ({...s, characters: ({...json, url})})))
-  }
+  const [ filter, setFilter ] = useState({page:1 })
 
   const clickPrevPagination = () => {
-    goToPage(state?.characters?.info?.prev)
+    setFilter(s => ({...s, page: s.page-1}))
   }
   const clickNextPagination = () => {
-    goToPage(state?.characters?.info?.next)
+    setFilter(s => ({...s, page: s.page+1}))
   }
 
-  const filterUrl = (key, value) => {
-    const searchParams = new URLSearchParams(charactersUrl.searchParams);
-    searchParams.set(key, value);
-    goToPage(`${charactersUrl.origin + charactersUrl.pathname}?${searchParams.toString()}`)
+  const onFilter = (key, value) => {
+    setFilter(s => ({...s, [key]: value}))
   }
 
   let paginationItems = []
@@ -44,8 +37,8 @@ export default function Characters(props) {
     paginationItems.push(
       <Pagination.Item 
         key={i} 
-        active={i === Number(currentPage)} 
-        onClick={() => goToPage(`${charactersUrl.origin + charactersUrl.pathname}?page=${i}`)}
+        active={i === Number(filter.page)} 
+        onClick={() => setFilter(s => ({...s, page: i}))}
       >
         {i}
       </Pagination.Item>
@@ -53,8 +46,12 @@ export default function Characters(props) {
   }
 
   useEffect(() => {
-    fetchRickAndMortyAPI(setState)
+    getRickAndMortyCharacters().then(characters => setState({characters}))
   }, [])
+
+  useEffect(() => {
+    getRickAndMortyCharactersFiltered(filter.page, filter.gender, filter.status).then(characters => setState({characters}))
+  }, [filter])
 
   return (
     <>
@@ -62,27 +59,27 @@ export default function Characters(props) {
         <DropdownButton 
           as={ButtonGroup} 
           title={
-            charactersUrl?.searchParams?.has('gender')
-            ? `Filter applied: ${charactersUrl.searchParams.get('gender')}`
+            filter.gender
+            ? `Filter applied: ${filter.gender}`
             : 'Filter By Gender'
           } 
         >
-          <Dropdown.Item onClick={()=> filterUrl('gender', 'male')}>Male</Dropdown.Item>
-          <Dropdown.Item onClick={()=> filterUrl('gender', 'female')}>Female</Dropdown.Item>
-          <Dropdown.Item onClick={()=> filterUrl('gender', 'genderless')}>Genderless</Dropdown.Item>
-          <Dropdown.Item onClick={()=> filterUrl('gender', 'unknown')}>Unknown</Dropdown.Item>
+          <Dropdown.Item onClick={()=> onFilter('gender', 'male')}>Male</Dropdown.Item>
+          <Dropdown.Item onClick={()=> onFilter('gender', 'female')}>Female</Dropdown.Item>
+          <Dropdown.Item onClick={()=> onFilter('gender', 'genderless')}>Genderless</Dropdown.Item>
+          <Dropdown.Item onClick={()=> onFilter('gender', 'unknown')}>Unknown</Dropdown.Item>
         </DropdownButton>
         <DropdownButton 
           as={ButtonGroup} 
           title={
-            charactersUrl?.searchParams?.has('status')
-            ? `Filter applied: ${charactersUrl.searchParams.get('status')}`
+            filter.status
+            ? `Filter applied: ${filter.status}`
             : 'Filter By Status'
           }
         >
-          <Dropdown.Item onClick={()=> filterUrl('status', 'alive')}>Alive</Dropdown.Item>
-          <Dropdown.Item onClick={()=> filterUrl('status', 'dead')}>Dead</Dropdown.Item>
-          <Dropdown.Item onClick={()=> filterUrl('status', 'unknown')}>Unknown</Dropdown.Item>
+          <Dropdown.Item onClick={()=> onFilter('status', 'alive')}>Alive</Dropdown.Item>
+          <Dropdown.Item onClick={()=> onFilter('status', 'dead')}>Dead</Dropdown.Item>
+          <Dropdown.Item onClick={()=> onFilter('status', 'unknown')}>Unknown</Dropdown.Item>
         </DropdownButton>
       </ButtonGroup>
       <Row xs={2} md={5} className="g-4">
