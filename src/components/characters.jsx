@@ -29,6 +29,7 @@ export default function Characters(props) {
 
   const onFilter = (key, value) => {
     setFilter(s => ({...s, [key]: value}))
+    localStorage.setItem(key, value);
   }
 
   let paginationItems = []
@@ -46,7 +47,11 @@ export default function Characters(props) {
   }
 
   useEffect(() => {
+    const gender = localStorage.getItem("gender");
+    const status = localStorage.getItem("status");
+    setFilter(s => ({...s, gender, status}))
     getRickAndMortyCharacters().then(characters => setState({characters}))
+    getRickAndMortyCharactersFiltered(filter.page, gender, status).then(characters => setState({characters}))
   }, [])
 
   useEffect(() => {
@@ -82,15 +87,19 @@ export default function Characters(props) {
           <Dropdown.Item onClick={()=> onFilter('status', 'unknown')}>Unknown</Dropdown.Item>
         </DropdownButton>
       </ButtonGroup>
-      <Row xs={2} md={5} className="g-4">
+      <Row xs={2} md={5} lg={10} className="">
         {state?.characters?.results?.map(char => {
           return (
             <Col key={char.id}>
-              <Card style={{ width: '18rem' }}>
+              <Card style={{ width: '10rem' }}>
                 <Card.Img variant="top" src={char.image} />
                 <Card.Body>
-                  <Card.Title>{char.name}</Card.Title>
-                  <Card.Subtitle>{char.gender}</Card.Subtitle>
+                  {/* <Card.Title>{char.name}</Card.Title> */}
+                  <Card.Subtitle>
+                    {char.name}
+                    <br />
+                    {char.gender}
+                  </Card.Subtitle>
                   <Card.Text style={{color: STATUS_COLOR[char.status]}}>
                     {char.status}
                   </Card.Text>
